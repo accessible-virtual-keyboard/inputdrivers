@@ -1,0 +1,5 @@
+
+# Read and write from Arduino Uno on Arch Linux.
+sudo pacman -S arduino
+sudo ln -s /usr/lib/libncursesw.so.6.0 /usr/lib/libtinfo.so.5
+gpasswd -a $USER uucp
