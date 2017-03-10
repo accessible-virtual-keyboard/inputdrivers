@@ -1,7 +1,10 @@
+
+#include <SoftwareSerial.h>
+
 /*
-   Reads from up to four EMG sensors and translates the signal
-   into boolean output that can be used with the Accessible
-   Virtual Keyboard application.
+   Reads from four EMG sensors and translates the signal into
+   boolean output. The signal is then sent over bluetooth to be
+   used with the Accessible Virtual Keyboard application.
 
    @author Kristian Honningsvag.
 */
@@ -12,26 +15,27 @@ const int EMG_SENSOR_PIN_1 = A1;
 const int EMG_SENSOR_PIN_2 = A2;
 const int EMG_SENSOR_PIN_3 = A3;
 
-const int OUTPUT_PIN_0 = 10;
-const int OUTPUT_PIN_1 = 11;
-const int OUTPUT_PIN_2 = 12;
-const int OUTPUT_PIN_3 = 13;
-
 // Variables.
 int sensorValue0 = 0;
 int sensorValue1 = 0;
 int sensorValue2 = 0;
 int sensorValue3 = 0;
 
-boolean outputValue0 = false;
-boolean outputValue1 = false;
-boolean outputValue2 = false;
-boolean outputValue3 = false;
+boolean currentOutputValue0 = false;
+boolean currentOutputValue1 = false;
+boolean currentOutputValue2 = false;
+boolean currentOutputValue3 = false;
+
+boolean previousOutputValue0 = false;
+boolean previousOutputValue1 = false;
+boolean previousOutputValue2 = false;
+boolean previousOutputValue3 = false;
 
 unsigned long timer = 0;
-unsigned int timeBetweenLogging = 200;   // Milliseconds.
+unsigned int timeBetweenLogging = 800;   // Milliseconds.
 int EMGTreshold = 900;   // When signal should activate.
 
+SoftwareSerial BTSerial(0, 1);
 
 /*
    Runs once on startup.
@@ -42,18 +46,26 @@ void setup() {
   pinMode(EMG_SENSOR_PIN_2, INPUT);
   pinMode(EMG_SENSOR_PIN_3, INPUT);
 
-  pinMode(OUTPUT_PIN_0, OUTPUT);
-  pinMode(OUTPUT_PIN_1, OUTPUT);
-  pinMode(OUTPUT_PIN_2, OUTPUT);
-  pinMode(OUTPUT_PIN_3, OUTPUT);
-
-  digitalWrite(OUTPUT_PIN_0, outputValue0);
-  digitalWrite(OUTPUT_PIN_1, outputValue1);
-  digitalWrite(OUTPUT_PIN_2, outputValue2);
-  digitalWrite(OUTPUT_PIN_3, outputValue3);
-
   Serial.begin(9600);
   timer = millis();
+
+
+
+  String setName = String("AT+NAME=AVIKEYB_INPUT\r\n");   // Setting name.
+  Serial.begin(9600);
+  BTSerial.begin(38400);
+  BTSerial.print("AT\r\n");       // Check Status.
+  delay(500);
+  while (BTSerial.available()) {
+    Serial.write(BTSerial.read());
+  }
+  BTSerial.print(setName);  // Send Command to change the name.
+  delay(500);
+  while (BTSerial.available()) {
+    Serial.write(BTSerial.read());
+  }
+
+  //  Serial.println("SET BT NAME AVIKEYB_INPUT");
 }
 
 
@@ -67,17 +79,13 @@ void loop() {
   sensorValue2 = getEMGSignal(EMG_SENSOR_PIN_2);
   sensorValue3 = getEMGSignal(EMG_SENSOR_PIN_3);
 
-  // Set the output values.
-  setOutput(OUTPUT_PIN_0, sensorValue0, outputValue0);
-  setOutput(OUTPUT_PIN_1, sensorValue1, outputValue1);
-  setOutput(OUTPUT_PIN_2, sensorValue2, outputValue2);
-  setOutput(OUTPUT_PIN_3, sensorValue3, outputValue3);
+  generateOutput();
 
-  // Print all values.
-  if ( (millis() - timer) >= timeBetweenLogging) {
-    timer = millis();
-    printAllSerial();
-  }
+  //  // Print all values.
+  //  if ( (millis() - timer) >= timeBetweenLogging) {
+  //    timer = millis();
+  //    printAllSerial();
+  //  }
 }
 
 
@@ -92,16 +100,34 @@ float getEMGSignal(int pin) {
 
 
 /*
-   Sets the value of an output pin based on it's corresponding sensor value.
+   Sets the values of the output variables based on their corresponding sensor values.
 */
-void setOutput(int outPutPin, int sensorValue, int outputValue) {
-  if (sensorValue > EMGTreshold) {
-    outputValue = true;
+void generateOutput() {
+
+  if (sensorValue0 > EMGTreshold) {
+    previousOutputValue0 = currentOutputValue0;
+    currentOutputValue0 = true;
   }
   else {
-    outputValue = false;
+    previousOutputValue0 = currentOutputValue0;
+    currentOutputValue0 = false;
   }
-  digitalWrite(outPutPin, outputValue);
+  if (currentOutputValue0 && !previousOutputValue0) {
+    Serial.println(0);
+  }
+
+  if (sensorValue1 > EMGTreshold) {
+    previousOutputValue1 = currentOutputValue1;
+    currentOutputValue1 = true;
+  }
+  else {
+    previousOutputValue1 = currentOutputValue1;
+    currentOutputValue1 = false;
+  }
+  if (currentOutputValue1 && !previousOutputValue1) {
+    Serial.println(1);
+  }
+
 }
 
 
@@ -114,30 +140,18 @@ void printAllSerial() {
   Serial.print(" | EMG0 ");
   Serial.print(sensorValue0);
   Serial.print("-");
-  Serial.print(outputValue0);
+  Serial.print(currentOutputValue0);
   Serial.print(" | EMG1 ");
   Serial.print(sensorValue1);
   Serial.print("-");
-  Serial.print(outputValue1);
+  Serial.print(currentOutputValue1);
   Serial.print(" | EMG2 ");
   Serial.print(sensorValue2);
   Serial.print("-");
-  Serial.print(outputValue2);
+  Serial.print(currentOutputValue2);
   Serial.print(" | EMG3 ");
   Serial.print(sensorValue3);
   Serial.print("-");
-  Serial.println(outputValue3);
-}
-
-
-/*
-   Prints the current values and their names in a format suitable for writing to a .CSV file.
-*/
-void printAllCSV() {
-  //  Serial.print("timer,");
-  //  Serial.print(timer);
-  //  Serial.print(",currentValue,");
-  //  Serial.print(currentValue);
-  //  Serial.print("\n");
+  Serial.println(currentOutputValue3);
 }
 
