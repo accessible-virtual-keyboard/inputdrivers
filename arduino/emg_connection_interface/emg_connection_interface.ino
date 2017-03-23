@@ -65,7 +65,7 @@ int getEMGSignal(int sensorIndex) {
   return analogRead(sensors[sensorIndex]);
 }
 
-void resetSensorValueToZero(int sensorIndex){
+void resetSensorValueToZero(int i){
   sensorValues[i].fillValue(0, RUNNING_AVG_SAMPLE_COUNT);
 }
 
