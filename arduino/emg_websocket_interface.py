@@ -13,11 +13,20 @@ class WebSocketClient(object):
                     on_close=self._on_close)
 
         self.connected = threading.Event()
+        self.reconnect = threading.Event()
+        self.closing = threading.Event()
 
     def run_forever(self):
         self._connection.run_forever()
+        if not self.closing.is_set() and self.reconnect.is_set():
+            print("Reconnecting...")
+            time.sleep(1)
+            if not self.closing.is_set():
+                self.reconnect.clear()
+                self.run_forever()
 
     def close(self):
+        self.closing.set()
         self._connection.close()
 
     def send_input(self, input):
@@ -30,6 +39,9 @@ class WebSocketClient(object):
     def _on_close(self, ws):
         print("Connection to websocket interface closed")
         self.connected.clear()
+        if not self.closing.is_set():
+            self.reconnect.set()
+            self._connection.close()
 
     def _on_error(self, ws, error):
         print("WebSocket error", error)
