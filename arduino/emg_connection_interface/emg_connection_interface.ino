@@ -62,8 +62,8 @@ void loop() {
 
     float sensorValue = sensorValues[i].getAverage();
 
-    // For debugging uncomment and use the serial plotter to see the signal values. (Remember to comment out the signal trigger println a few lines below) 
-    //Serial.println(String(sensorValue) + "  " + thresholdValuesHigh[i].getAverage() + " " + thresholdValuesLow[i].getAverage());
+    // For debugging uncomment and use the serial plotter to see the signal values, also uncomment line 90. (Remember to comment out the signal trigger println a few lines below on line 70) 
+    //Serial.println(String(sensorValue) + "  " + thresholdValuesHigh[i].getAverage() + " " + thresholdValuesLow[i].getAverage() + " ");
     
     if(sensorValue > thresholdValuesHigh[i].getAverage()){
       if(!inputTriggerState[i]){
@@ -87,6 +87,7 @@ void loop() {
     }
 
   }
+  //Serial.println("");
   delay(20);
 }
 
