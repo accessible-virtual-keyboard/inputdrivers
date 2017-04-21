@@ -142,15 +142,19 @@ public class EpocDriver implements Runnable {
 
             int edkErrorCode = EmotivCloudClient.INSTANCE.EC_GetProfileId(userCloudID.getValue(), profileName, profileID);
 
+            if(edkErrorCode != EdkErrorCode.EDK_OK.ToInt()){
+                System.out.println("Failed to load profile id for: " + profileName);
+            }
+
             System.out.println("Profile id for " + profileName + " is " + profileID.getValue());
 
             System.out.println("Loading profile " + profileName + " (" + profileID.getValue() + ") to headset");
-            if (EmotivCloudClient.INSTANCE.EC_LoadUserProfile(userCloudID.getValue(), engineUserID.getValue(), profileID.getValue(), -1) == EdkErrorCode.EDK_OK.ToInt()) {
+            edkErrorCode = EmotivCloudClient.INSTANCE.EC_LoadUserProfile(userCloudID.getValue(), engineUserID.getValue(), profileID.getValue(), -1);
+            if (edkErrorCode == EdkErrorCode.EDK_OK.ToInt()) {
                 System.out.println("Loaded user profile: " + profileName + "(" + profileID.getValue() + ") to headset");
             }
             else {
-                System.err.println("Failed to load user profile.");
-                System.err.println("edkErrorCode:" + edkErrorCode + " | profileID: " + profileID.getValue());
+                System.err.println("Failed to load user profile. edkErrorCode:" + edkErrorCode + " | profileID: " + profileID.getValue());
             }
         } else {
             System.out.println("No profiles available");
