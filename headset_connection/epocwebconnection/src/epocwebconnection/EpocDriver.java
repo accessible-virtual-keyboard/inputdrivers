@@ -131,16 +131,29 @@ public class EpocDriver implements Runnable {
      */
     private void loadProfile() {
         int getNumberProfile = EmotivCloudClient.INSTANCE.EC_GetAllProfileName(userCloudID.getValue());
-        int edkErrorCode = EmotivCloudClient.INSTANCE.EC_GetProfileId(userCloudID.getValue(), profileName, profileID);
-
         if (getNumberProfile > 0) {  // If profiles exist.
+
+            System.out.println("Available profiles: ");
+            for(int i=0; i < getNumberProfile; i++){
+                System.out.println(EmotivCloudClient.INSTANCE.EC_ProfileNameAtIndex(userCloudID.getValue(), i));
+            }
+
+            System.out.println("Loading profile id for " + profileName);
+
+            int edkErrorCode = EmotivCloudClient.INSTANCE.EC_GetProfileId(userCloudID.getValue(), profileName, profileID);
+
+            System.out.println("Profile id for " + profileName + " is " + profileID.getValue());
+
+            System.out.println("Loading profile " + profileName + " (" + profileID.getValue() + ") to headset");
             if (EmotivCloudClient.INSTANCE.EC_LoadUserProfile(userCloudID.getValue(), engineUserID.getValue(), profileID.getValue(), -1) == EdkErrorCode.EDK_OK.ToInt()) {
-                System.out.println("Loaded user profile: " + profileID.getValue());
+                System.out.println("Loaded user profile: " + profileName + "(" + profileID.getValue() + ") to headset");
             }
             else {
                 System.err.println("Failed to load user profile.");
                 System.err.println("edkErrorCode:" + edkErrorCode + " | profileID: " + profileID.getValue());
             }
+        } else {
+            System.out.println("No profiles available");
         }
     }
 
@@ -193,7 +206,7 @@ public class EpocDriver implements Runnable {
             if (state == EdkErrorCode.EDK_OK.ToInt()) {
 
                 int eventType = Edk.INSTANCE.IEE_EmoEngineEventGetType(E_EVENT);
-                Edk.INSTANCE.IEE_EmoEngineEventGetUserId(E_EVENT, userCloudID);
+                // Edk.INSTANCE.IEE_EmoEngineEventGetUserId(E_EVENT, userCloudID); // This is probably not needed. It will reset userCloudID to 0
 
                 // Handle the EmoState if it has been updated.
                 if (eventType == Edk.IEE_Event_t.IEE_EmoStateUpdated.ToInt()) {
@@ -203,6 +216,7 @@ public class EpocDriver implements Runnable {
                     System.out.print("TimeStamp: " + EmoState.INSTANCE.IS_GetTimeFromStart(E_STATE)
                             + " | WifiStatus: " + EmoState.INSTANCE.IS_GetWirelessSignalStatus(E_STATE)
                             + " | CloudUser: " + userCloudID.getValue()
+                            + " | ProfileId: " + profileID.getValue()
                             + " | MentalCommandID: " + EmoState.INSTANCE.IS_MentalCommandGetCurrentAction(E_STATE)
                             + " | CommandStrength: " + EmoState.INSTANCE.IS_MentalCommandGetCurrentActionPower(E_STATE));
                     sendToKeyboard();
