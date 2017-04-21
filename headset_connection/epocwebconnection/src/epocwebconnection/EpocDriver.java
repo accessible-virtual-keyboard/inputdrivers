@@ -37,7 +37,7 @@ public class EpocDriver implements Runnable {
 
     private String accountName = "student_group57";         // Name of the Emotiv cloud account.
     private String accountPassword = "pralina2017PRALINA";  // The cloud accounts password.
-    private String profileName = "ingalill";                // A specific user profile.
+    private String profileName = "kristian";                // A specific user profile.
     private String keyboardServerURL = "ws://avikeyb.myr1.net/input";
     private URI keyboardURI = null;
     private WebSocketClient webSocketClient = null;
@@ -65,7 +65,7 @@ public class EpocDriver implements Runnable {
         connectToEmotivServer();
         loadProfile();
         connectToKeyboard();
-        doSomething();
+//        doSomething();
     }
 
     /**
@@ -90,8 +90,7 @@ public class EpocDriver implements Runnable {
 //        if (Edk.INSTANCE.IEE_EngineRemoteConnect("127.0.0.1", (short) 1726, "Emotiv Systems-5") != EdkErrorCode.EDK_OK.ToInt()) {  // Connects to composer.
         if (Edk.INSTANCE.IEE_EngineConnect("Emotiv Systems-5") != EdkErrorCode.EDK_OK.ToInt()) {  // Connects to headset.
             System.err.println("Failed to establish headset connection.");
-        }
-        else {
+        } else {
             System.out.println("Headset connection established.");
         }
     }
@@ -103,8 +102,7 @@ public class EpocDriver implements Runnable {
         // Connect to Emotiv server.
         if (EmotivCloudClient.INSTANCE.EC_Connect() != EdkErrorCode.EDK_OK.ToInt()) {
             System.err.println("Cannot connect to Emotiv server.");
-        }
-        else {
+        } else {
             System.out.println("Connected to Emotiv server.");
         }
 
@@ -112,17 +110,15 @@ public class EpocDriver implements Runnable {
         if (EmotivCloudClient.INSTANCE.EC_Login(accountName, accountPassword) != EdkErrorCode.EDK_OK.ToInt()) {
             System.err.println("Login attempt failed. Username or password may be incorrect");
             return;
-        }
-        else {
+        } else {
             System.out.println("Logged in as " + accountName);
         }
 
         // Check user details.
         if (EmotivCloudClient.INSTANCE.EC_GetUserDetail(userCloudID) != EdkErrorCode.EDK_OK.ToInt()) {
             System.err.println("Failed to get user cloud ID.");
-        }
-        else {
-            System.out.println("userCloudID: " + userCloudID.getValue());
+        } else {
+            System.out.println("userCloudID is: " + userCloudID.getValue());
         }
     }
 
@@ -130,34 +126,33 @@ public class EpocDriver implements Runnable {
      * Loads a user profile from the Emotiv server.
      */
     private void loadProfile() {
-        int getNumberProfile = EmotivCloudClient.INSTANCE.EC_GetAllProfileName(userCloudID.getValue());
-        if (getNumberProfile > 0) {  // If profiles exist.
+        int numberOfProfiles = EmotivCloudClient.INSTANCE.EC_GetAllProfileName(userCloudID.getValue());
+        if (numberOfProfiles > 0) {  // If profiles exist.
 
-            System.out.println("Available profiles: ");
-            for(int i=0; i < getNumberProfile; i++){
-                System.out.println(EmotivCloudClient.INSTANCE.EC_ProfileNameAtIndex(userCloudID.getValue(), i));
+            // List available profiles.
+            System.out.println("Available profiles:");
+            for (int i = 0; i < numberOfProfiles; i++) {
+                System.out.println("  " + EmotivCloudClient.INSTANCE.EC_ProfileNameAtIndex(userCloudID.getValue(), i));
             }
 
-            System.out.println("Loading profile id for " + profileName);
-
+            // Get profileId for a specific profile.
             int edkErrorCode = EmotivCloudClient.INSTANCE.EC_GetProfileId(userCloudID.getValue(), profileName, profileID);
-
-            if(edkErrorCode != EdkErrorCode.EDK_OK.ToInt()){
-                System.out.println("Failed to load profile id for: " + profileName);
+            if (edkErrorCode != EdkErrorCode.EDK_OK.ToInt()) {
+                System.err.println("Failed to load profile id for: " + profileName);
+            } else {
+                System.out.println("Profile id for " + profileName + " is " + profileID);
             }
 
-            System.out.println("Profile id for " + profileName + " is " + profileID.getValue());
-
-            System.out.println("Loading profile " + profileName + " (" + profileID.getValue() + ") to headset");
+            // Load specific profile to headset.
+            System.out.println("Loading profile " + profileName + " (" + profileID.getValue() + ") to headset.");
             edkErrorCode = EmotivCloudClient.INSTANCE.EC_LoadUserProfile(userCloudID.getValue(), engineUserID.getValue(), profileID.getValue(), -1);
             if (edkErrorCode == EdkErrorCode.EDK_OK.ToInt()) {
-                System.out.println("Loaded user profile: " + profileName + "(" + profileID.getValue() + ") to headset");
-            }
-            else {
-                System.err.println("Failed to load user profile. edkErrorCode:" + edkErrorCode + " | profileID: " + profileID.getValue());
+                System.out.println("Loaded user profile: " + profileName + "(" + profileID.getValue() + ") to headset.");
+            } else {
+                System.err.println("Failed to load user profile. | edkErrorCode: " + edkErrorCode + " | profileID: " + profileID.getValue());
             }
         } else {
-            System.out.println("No profiles available");
+            System.err.println("No profiles available.");
         }
     }
 
@@ -169,8 +164,7 @@ public class EpocDriver implements Runnable {
             keyboardURI = new URI(keyboardServerURL);
             createSocketClient();
             System.out.println("Connected to the Accessible Virtual Keyboard server.");
-        }
-        catch (URISyntaxException ex) {
+        } catch (URISyntaxException ex) {
             System.err.println("Failed to connect to the Accessible Virtual Keboard server.");
             Logger.getLogger(EpocDriver.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
@@ -188,8 +182,7 @@ public class EpocDriver implements Runnable {
 
             if (eventType == Edk.IEE_Event_t.IEE_UserAdded.ToInt()) {
                 System.out.println("New user " + engineUserID.getValue() + " added");
-            }
-            else if (eventType == Edk.IEE_Event_t.IEE_EmoStateUpdated.ToInt()) {
+            } else if (eventType == Edk.IEE_Event_t.IEE_EmoStateUpdated.ToInt()) {
                 Edk.INSTANCE.IEE_EmoEngineEventGetEmoState(E_EVENT, E_STATE);
             }
         }
@@ -225,8 +218,7 @@ public class EpocDriver implements Runnable {
                             + " | CommandStrength: " + EmoState.INSTANCE.IS_MentalCommandGetCurrentActionPower(E_STATE));
                     sendToKeyboard();
                 }
-            }
-            else if (state != EdkErrorCode.EDK_NO_EVENT.ToInt()) {
+            } else if (state != EdkErrorCode.EDK_NO_EVENT.ToInt()) {
                 System.err.println("Internal error in Emotiv Engine!");
                 isRunning = false;
                 break;
