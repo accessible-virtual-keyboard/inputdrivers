@@ -37,8 +37,8 @@ public class EpocDriver implements Runnable {
 
     private String accountName = "student_group57";         // Name of the Emotiv cloud account.
     private String accountPassword = "pralina2017PRALINA";  // The cloud accounts password.
-    private String profileName = "kristian";                // A specific user profile.
-    private String keyboardServerURL = "ws://avikeyb.myr1.net/input";
+    private String profileName = "ingalill";                // A specific user profile.
+    private String keyboardServerURL = "ws://158.38.192.39:43879/input"; //ws://158.38.192.39:43879/input // ws://avikeyb.myr1.net/input
     private URI keyboardURI = null;
     private WebSocketClient webSocketClient = null;
     private boolean isRunning = true;
@@ -50,7 +50,7 @@ public class EpocDriver implements Runnable {
     private static final int PUSH = 2;
     private static final int PULL = 3;
     private float timeBetweenCommands = 1;  // Dictates how often one can send the same mental command (seconds between commands).
-    private float triggerTreshold = 0.70f;  // How strong the mental command must be in order to trigger.
+    private float triggerTreshold = 0.20f;  // How strong the mental command must be in order to trigger.
 
     /**
      * Constructs the HeadsetConnection object, and connects to the necessary
