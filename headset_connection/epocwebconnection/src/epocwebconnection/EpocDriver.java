@@ -50,7 +50,7 @@ public class EpocDriver implements Runnable {
     private static final int PUSH = 2;
     private static final int PULL = 3;
     private float timeBetweenCommands = 1;  // Dictates how often one can send the same mental command (seconds between commands).
-    private float triggerTreshold = 0.70f;  // How strong the mental command must be in order to trigger.
+    private float triggerTreshold = 0.20f;  // How strong the mental command must be in order to trigger.
 
     /**
      * Constructs the HeadsetConnection object, and connects to the necessary
