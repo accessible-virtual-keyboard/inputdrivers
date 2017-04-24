@@ -37,8 +37,8 @@ public class EpocDriver implements Runnable {
 
     private String accountName = "student_group57";         // Name of the Emotiv cloud account.
     private String accountPassword = "pralina2017PRALINA";  // The cloud accounts password.
-    private String profileName = "kristian";                // A specific user profile.
-    private String keyboardServerURL = "ws://avikeyb.myr1.net/input";
+    private String profileName = "ingalill";                // A specific user profile.
+    private String keyboardServerURL = "ws://158.38.192.39:43879/input"; //ws://158.38.192.39:43879/input // ws://avikeyb.myr1.net/input
     private URI keyboardURI = null;
     private WebSocketClient webSocketClient = null;
     private boolean isRunning = true;
