@@ -80,7 +80,7 @@ public class EpocDriver implements Runnable {
         EpocDriver emoDriver = new EpocDriver();
         Thread t1 = new Thread(emoDriver);
         t1.start();
-        emoDriver.mainLoop();
+        t1.join();
     }
 
     /**
@@ -163,7 +163,6 @@ public class EpocDriver implements Runnable {
         try {
             keyboardURI = new URI(keyboardServerURL);
             createSocketClient();
-            System.out.println("Connected to the Accessible Virtual Keyboard server.");
         } catch (URISyntaxException ex) {
             System.err.println("Failed to connect to the Accessible Virtual Keboard server.");
             Logger.getLogger(EpocDriver.class.getName()).log(Level.SEVERE, null, ex);
@@ -197,6 +196,11 @@ public class EpocDriver implements Runnable {
         System.out.println("Waiting for incoming data...");
 
         while (isRunning) {
+            
+            if (webSocketClient.getReadyState() == WebSocketClient.READYSTATE.CLOSED) {
+                createSocketClient();
+            }
+            
             state = Edk.INSTANCE.IEE_EngineGetNextEvent(E_EVENT);
 
             // Handle new event.
@@ -244,6 +248,7 @@ public class EpocDriver implements Runnable {
         webSocketClient = new WebSocketClient(keyboardURI) {
             @Override
             public void onOpen(ServerHandshake sh) {
+                System.out.println("Connection established.");
             }
 
             @Override
@@ -252,15 +257,17 @@ public class EpocDriver implements Runnable {
 
             @Override
             public void onClose(int i, String string, boolean bln) {
-                // Reconnect if connection is lost.
-                createSocketClient();
+                System.err.println("Connection error.");
             }
 
             @Override
             public void onError(Exception ex) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                System.err.println("Connection lost.");
+                System.err.println(ex.getMessage());
+//                throw new UnsupportedOperationException("Not supported yet.");
             }
         };
+        System.out.println("Attempting connection to the Accessible Virtual Keyboard server.");
         webSocketClient.connect();
     }
 
@@ -269,10 +276,14 @@ public class EpocDriver implements Runnable {
      * keyboard server.
      */
     private void sendToKeyboard() {
-
         currentTimeStamp = EmoState.INSTANCE.IS_GetTimeFromStart(E_STATE);
 
         if (EmoState.INSTANCE.IS_MentalCommandGetCurrentActionPower(E_STATE) >= triggerTreshold) {
+
+
+            if (webSocketClient.getReadyState() != WebSocketClient.READYSTATE.OPEN) {
+                return;
+            }
 
             switch (EmoState.INSTANCE.IS_MentalCommandGetCurrentAction(E_STATE)) {
                 case 32: // Left.
@@ -314,6 +325,7 @@ public class EpocDriver implements Runnable {
     // Overrides.
     @Override
     public void run() {
+        mainLoop();
     }
 
 }
