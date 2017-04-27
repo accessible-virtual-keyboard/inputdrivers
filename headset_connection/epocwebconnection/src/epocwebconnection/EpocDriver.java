@@ -38,7 +38,7 @@ public class EpocDriver implements Runnable {
     private String accountName = "student_group57";         // Name of the Emotiv cloud account.
     private String accountPassword = "pralina2017PRALINA";  // The cloud accounts password.
     private String profileName = "ingalill";                // A specific user profile.
-    private String keyboardServerURL = "ws://158.38.192.39:43879/input"; //ws://158.38.192.39:43879/input // ws://avikeyb.myr1.net/input
+    private String keyboardServerURL = "ws://158.38.92.139:43879/input";  // ws://avikeyb.myr1.net/input
     private URI keyboardURI = null;
     private WebSocketClient webSocketClient = null;
     private boolean isRunning = true;
@@ -49,8 +49,8 @@ public class EpocDriver implements Runnable {
     private static final int RIGHT = 1;
     private static final int PUSH = 2;
     private static final int PULL = 3;
-    private float timeBetweenCommands = 1;  // Dictates how often one can send the same mental command (seconds between commands).
-    private float triggerTreshold = 0.20f;  // How strong the mental command must be in order to trigger.
+    private float timeBetweenCommands = 1.5f;  // Dictates how often one can send the same mental command (seconds between commands).
+    private float triggerTreshold = 0.30f;     // How strong the mental command must be in order to trigger.
 
     /**
      * Constructs the HeadsetConnection object, and connects to the necessary
@@ -65,7 +65,6 @@ public class EpocDriver implements Runnable {
         connectToEmotivServer();
         loadProfile();
         connectToKeyboard();
-//        doSomething();
     }
 
     /**
@@ -171,23 +170,6 @@ public class EpocDriver implements Runnable {
     }
 
     /**
-     * TODO: Is this necessary?
-     */
-    private void doSomething() {
-        state = Edk.INSTANCE.IEE_EngineGetNextEvent(E_EVENT);
-        if (state == EdkErrorCode.EDK_OK.ToInt()) {
-            int eventType = Edk.INSTANCE.IEE_EmoEngineEventGetType(E_EVENT);
-            Edk.INSTANCE.IEE_EmoEngineEventGetUserId(E_EVENT, engineUserID);
-
-            if (eventType == Edk.IEE_Event_t.IEE_UserAdded.ToInt()) {
-                System.out.println("New user " + engineUserID.getValue() + " added");
-            } else if (eventType == Edk.IEE_Event_t.IEE_EmoStateUpdated.ToInt()) {
-                Edk.INSTANCE.IEE_EmoEngineEventGetEmoState(E_EVENT, E_STATE);
-            }
-        }
-    }
-
-    /**
      * Main loop of the application. Listens for data from the headset,
      * interprets it, and sends the proper responses to the web socket.
      */
@@ -196,11 +178,11 @@ public class EpocDriver implements Runnable {
         System.out.println("Waiting for incoming data...");
 
         while (isRunning) {
-            
+
             if (webSocketClient.getReadyState() == WebSocketClient.READYSTATE.CLOSED) {
                 createSocketClient();
             }
-            
+
             state = Edk.INSTANCE.IEE_EngineGetNextEvent(E_EVENT);
 
             // Handle new event.
@@ -248,26 +230,26 @@ public class EpocDriver implements Runnable {
         webSocketClient = new WebSocketClient(keyboardURI) {
             @Override
             public void onOpen(ServerHandshake sh) {
-                System.out.println("Connection established.");
+                System.out.println("Websocket connection established.");
             }
 
             @Override
             public void onMessage(String string) {
+                // Not implemented.
             }
 
             @Override
             public void onClose(int i, String string, boolean bln) {
-                System.err.println("Connection error.");
+                System.err.println("Websocket onClose()");
             }
 
             @Override
             public void onError(Exception ex) {
-                System.err.println("Connection lost.");
-                System.err.println(ex.getMessage());
-//                throw new UnsupportedOperationException("Not supported yet.");
+                System.err.println("Websocket onError()");
+                System.err.println(ex);
             }
         };
-        System.out.println("Attempting connection to the Accessible Virtual Keyboard server.");
+        System.out.println("Attempting websocket connection to AVK server.");
         webSocketClient.connect();
     }
 
@@ -279,7 +261,6 @@ public class EpocDriver implements Runnable {
         currentTimeStamp = EmoState.INSTANCE.IS_GetTimeFromStart(E_STATE);
 
         if (EmoState.INSTANCE.IS_MentalCommandGetCurrentActionPower(E_STATE) >= triggerTreshold) {
-
 
             if (webSocketClient.getReadyState() != WebSocketClient.READYSTATE.OPEN) {
                 return;
