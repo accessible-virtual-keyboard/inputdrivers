@@ -1,0 +1,9 @@
+#Open PowerShell in folder
+C:\Users\StudentHials\AppData\Local\Android\sdk\platform-tools\
+
+#Forward port
+.\adb.exe forward tcp:43879 tcp:43879
+
+#Find IP
+.\adb.exe shell
+ifconfig

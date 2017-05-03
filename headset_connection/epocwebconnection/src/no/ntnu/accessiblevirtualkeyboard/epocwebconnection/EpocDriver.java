@@ -1,4 +1,4 @@
-package epocwebconnection;
+package no.ntnu.accessiblevirtualkeyboard.epocwebconnection;
 
 import com.emotiv.Iedk.Edk;
 import com.emotiv.Iedk.EdkErrorCode;
@@ -14,14 +14,14 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 /**
- * This is a web socket driver for the Emotiv Epoc+ EEG headset. The driver does
- * the following;
+ * This driver uses web sockets to connect the Accessible Virtual Keyboard with
+ * the Emotiv Epoc+ EEG headset. The driver does the following;
  *
- * 1: Connects to the Epoc+ headset via it's proprietary USB dongle. 2: Connects
- * to an Emotiv cloud account and loads a specific user profile. 3: Establishes
- * a web socket connection to the Accessible Virtual Keyboard server. 4:
- * Interprets the received headset data, and sends the appropriate data to the
- * keyboards web socket.
+ * 1: Connects to the Epoc+ headset via it's proprietary USB dongle.
+ * 2: Connects to an Emotiv cloud account and loads a specific user profile.
+ * 3: Establishes a web socket connection to the Accessible Virtual Keyboard server.
+ * 4: Listens for input from the headset, interprets the received headset data,
+ * and sends the appropriate data to the keyboards web socket.
  *
  * @author Kristian Honningsvag.
  */
@@ -37,8 +37,8 @@ public class EpocDriver implements Runnable {
 
     private String accountName = "student_group57";         // Name of the Emotiv cloud account.
     private String accountPassword = "pralina2017PRALINA";  // The cloud accounts password.
-    private String profileName = "ingalill";                // A specific user profile.
-    private String keyboardServerURL = "ws://158.38.92.139:43879/input";  // ws://avikeyb.myr1.net/input
+    private String profileName = "kristian";                // A specific user profile.
+    private String keyboardServerURL = "ws://localhost:43879/input";  // "ws://158.38.92.60:43879/input";  ws://avikeyb.myr1.net/input
     private URI keyboardURI = null;
     private WebSocketClient webSocketClient = null;
     private boolean isRunning = true;
@@ -179,23 +179,19 @@ public class EpocDriver implements Runnable {
 
         while (isRunning) {
 
+            // Reconnect to the web socket if needed.
             if (webSocketClient.getReadyState() == WebSocketClient.READYSTATE.CLOSED) {
                 createSocketClient();
             }
 
+            // Get new event and handle it.
             state = Edk.INSTANCE.IEE_EngineGetNextEvent(E_EVENT);
-
-            // Handle new event.
             if (state == EdkErrorCode.EDK_OK.ToInt()) {
 
-                int eventType = Edk.INSTANCE.IEE_EmoEngineEventGetType(E_EVENT);
-                // Edk.INSTANCE.IEE_EmoEngineEventGetUserId(E_EVENT, userCloudID); // This is probably not needed. It will reset userCloudID to 0
-
                 // Handle the EmoState if it has been updated.
+                int eventType = Edk.INSTANCE.IEE_EmoEngineEventGetType(E_EVENT);
                 if (eventType == Edk.IEE_Event_t.IEE_EmoStateUpdated.ToInt()) {
-
                     Edk.INSTANCE.IEE_EmoEngineEventGetEmoState(E_EVENT, E_STATE);
-
                     System.out.print("TimeStamp: " + EmoState.INSTANCE.IS_GetTimeFromStart(E_STATE)
                             + " | WifiStatus: " + EmoState.INSTANCE.IS_GetWirelessSignalStatus(E_STATE)
                             + " | CloudUser: " + userCloudID.getValue()
@@ -230,7 +226,7 @@ public class EpocDriver implements Runnable {
         webSocketClient = new WebSocketClient(keyboardURI) {
             @Override
             public void onOpen(ServerHandshake sh) {
-                System.out.println("Websocket connection established.");
+                System.out.println("Web socket connection established.");
             }
 
             @Override
@@ -240,16 +236,16 @@ public class EpocDriver implements Runnable {
 
             @Override
             public void onClose(int i, String string, boolean bln) {
-                System.err.println("Websocket onClose()");
+                System.err.println("Websocket onClose() was triggered");
             }
 
             @Override
             public void onError(Exception ex) {
-                System.err.println("Websocket onError()");
+                System.err.println("Websocket onError() was triggered");
                 System.err.println(ex);
             }
         };
-        System.out.println("Attempting websocket connection to AVK server.");
+        System.out.println("Attempting web socket connection to AVK server.");
         webSocketClient.connect();
     }
 
@@ -260,8 +256,10 @@ public class EpocDriver implements Runnable {
     private void sendToKeyboard() {
         currentTimeStamp = EmoState.INSTANCE.IS_GetTimeFromStart(E_STATE);
 
+        // Command strength needs to be over the treshold in order to trigger.
         if (EmoState.INSTANCE.IS_MentalCommandGetCurrentActionPower(E_STATE) >= triggerTreshold) {
 
+            // Don't attempt sending output if web socket is not ready.
             if (webSocketClient.getReadyState() != WebSocketClient.READYSTATE.OPEN) {
                 return;
             }
