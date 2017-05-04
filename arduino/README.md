@@ -1,10 +1,20 @@
 
-# Input drivers for the keyboard
+# Arduino input drivers for the keyboard
 
-Here you will find a collection of input drivers to use with the keyboard. The input drivers make it possible to use different kinds of hardware sensors
-as input sources for the keyboard.
+Here is a collection of keyboard input drivers for different kinds of hardware using the arduino microcontroller.
 
 
-Currently there are input drivers for a some hardware used together with the [arduino microcontroller](arduino) and a driver for the [Emotiv Epoc+ EEG headset](headset_connection).
+## Arduino keyboard connection
 
+The [arduino_keyboard_connection](arduino_keyboard_connection) script is not an input driver for the arduino. This script is used as a bridge to connect 
+the different arduino driver to the keyboard.
+
+
+## MyoWare Muscle Sensors - EMG
+
+The [emg_driver](emg_driver) will make it possible to use the MyoWare Muscle Sensors as an input source for the keybaord.
+
+## Hardware Buttons
+
+The [button_controller](button_controller) driver is simple hardware push buttons.
 
