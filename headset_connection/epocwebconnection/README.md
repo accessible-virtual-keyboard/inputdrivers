@@ -1,5 +1,5 @@
 
-# Driver for theEmotiv Epoc+ EEG headset
+# Driver for the Emotiv Epoc+ EEG headset
 
 Connects the headset to the keyboard. The Left and Right mental commands is mapped to the input1 and input2 keyboard inputs respectively. 
 
